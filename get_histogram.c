@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/time.h>
 
 #define ITEM_SIZE sizeof(char)
 #define NUM_ALPHABETS 26
@@ -32,6 +33,10 @@ int get_histogram(
    int ch;
    int AA = 'A';
 
+   // time_before, time_after, time_result (after diff)
+   struct timeval ti_b, ti_a, ti_r;
+   double totalBuffTimeMS;
+
    memset(hist, 0, NUM_ALPHABETS * sizeof(long));
 
    while( !feof(file_ptr) ) {
@@ -39,10 +44,12 @@ int get_histogram(
       memset(buffer, 0, block_size * ITEM_SIZE);
 
       //Start Timer
+      gettimeofday(&ti_b, NULL);
 
       rc = fread(buffer, ITEM_SIZE, block_size * ITEM_SIZE, file_ptr);   
 
       //Stop Timer
+      gettimeofday(&ti_a, NULL);
 
       if ( ferror(file_ptr) ) {
          free(buffer);
@@ -54,7 +61,12 @@ int get_histogram(
          hist[ ch - AA ]++;
       }
 
-      total_bytes_read += rc;
+      // Find diff between before and after tiemstamp
+      timersub(&ti_a, &ti_b, &ti_r);
+
+      totalBuffTimeMS = (ti_r.tv_sec * 1000.0) + (ti_r.tv_usec / 1000.0); 
+      *milliseconds += totalBuffTimeMS;
+      *total_bytes_read += rc;
    }
    
    free(buffer); 
@@ -107,13 +119,13 @@ int main(int argc, char** argv) {
       goto errexit;
    }
  
-//   printf("Computed the histogram in %f ms.\n", milliseconds);
+   printf("Computed the histogram in %f ms.\n", milliseconds);
 
    for(int i=0; i < NUM_ALPHABETS; i++) {
        printf("%c : %lu\n", 'A' + i, hist[i]);
    }
 
-//   printf("Data rate: %f Bps\n", (double)filelen/milliseconds * 1000);
+   printf("Data rate: %lu Bps\n", (long) (filelen/milliseconds * 1000.0));
 
    fclose(file_ptr);
    return EXIT_SUCCESS;

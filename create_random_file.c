@@ -61,6 +61,7 @@ int main(int argc, char** argv) {
    char* randString = malloc(buffSize * sizeof(char));
    long bytesWritten = 0;
 
+   // time_before, time_after, time_result (after diff)
    struct timeval ti_b, ti_a, ti_r;
    double totalBuffTimeMS;
    double totalTimeMS;
@@ -82,6 +83,8 @@ int main(int argc, char** argv) {
 
       // Stop Timer
       gettimeofday(&ti_a, NULL);
+
+      // Find diff between before and after tiemstamp
       timersub(&ti_a, &ti_b, &ti_r);
 
       totalBuffTimeMS = (ti_r.tv_sec * 1000.0) + (ti_r.tv_usec / 1000.0);
