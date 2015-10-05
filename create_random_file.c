@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/timeb.h>
+#include <sys/time.h>
 
 #define ITEM_SIZE sizeof(char)
 typedef int bool;
@@ -39,7 +39,8 @@ int main(int argc, char** argv) {
    long totalBytes = strtol(argv[2], &err, 10);
    
    if (!*err) {
-      printf("Total Bytes Entered: %lu\n", totalBytes);
+      if (verbose)
+         printf("Total Bytes Entered: %lu\n", totalBytes);
    } else {
       printf("Invalid Total bytes value (Not a number).\n");
       goto errexit;
@@ -48,7 +49,8 @@ int main(int argc, char** argv) {
    long buffSize = strtol(argv[3], &err, 10);
    
    if (!*err) {
-      printf("Block Size Entered: %lu\n", buffSize);
+      if (verbose)
+         printf("Block Size Entered: %lu\n", buffSize);
    } else {
       printf("Invalid Block Size entered (Not a number).\n");
       goto errexit;
@@ -57,9 +59,10 @@ int main(int argc, char** argv) {
    char* randString = malloc(buffSize * sizeof(char));
    long bytesWritten = 0;
 
-   struct timeb ti_s, ti_e;
-   long endTime;
-   long totalTimeMS = 0;
+   struct timeval ti_b, ti_a, ti_r;
+   double totalBuffTimeMS;
+   double totalTimeMS;
+   double totalTimeS;
 
    FILE *fp = fopen(argv[1], "w");
 
@@ -70,22 +73,24 @@ int main(int argc, char** argv) {
       random_array(randString, buffSize);
       
       // Start Timer
-      ftime(&ti_s);
+      gettimeofday(&ti_b, NULL);
 
       fwrite(randString, ITEM_SIZE, buffSize, fp);
       fflush(fp);
 
       // Stop Timer
-      ftime(&ti_e);
-      endTime = (ti_e.time - ti_s.time) * 1000.0 + (ti_e.millitm - ti_s.millitm);
+      gettimeofday(&ti_a, NULL);
+      timersub(&ti_a, &ti_b, &ti_r);
+
+      totalBuffTimeMS = (ti_r.tv_sec * 1000.0) + (ti_r.tv_usec / 1000.0);
 
       if (verbose) {
          printf("Buffer %d stats: ", j+1);
          printf("Bytes Written: %lu ", ITEM_SIZE * buffSize);
-         printf("Time to write (MS): %lu\n\n", endTime);
+         printf("Time to write (MS): %f\n\n", totalBuffTimeMS);
       }
 
-      totalTimeMS += endTime;
+      totalTimeMS += totalBuffTimeMS;
       totalBytes -= buffSize;
       bytesWritten += ITEM_SIZE * buffSize;
    }
@@ -95,30 +100,38 @@ int main(int argc, char** argv) {
       random_array(randString, totalBytes);
 
       // Start Timer
-      ftime(&ti_s);
+      gettimeofday(&ti_b, NULL);
 
       fwrite(randString, ITEM_SIZE, totalBytes, fp);
       fflush(fp);
 
       // Stop Timer
-      ftime(&ti_e);
-      endTime =(ti_e.time - ti_s.time) * 1000.0 + (ti_e.millitm - ti_s.millitm); 
+      gettimeofday(&ti_a, NULL);
+      timersub(&ti_a, &ti_b, &ti_r);
+
+      totalBuffTimeMS = (ti_r.tv_sec * 1000.0) + (ti_r.tv_usec / 1000.0);
 
       if (verbose) {
          printf("Buffer %d stats: ", j+1);
          printf("Bytes Written: %lu ", ITEM_SIZE * totalBytes);
-         printf("Time to write (MS): %lu\n", endTime);
+         printf("Time to write (MS): %f\n", totalBuffTimeMS);
       }
 
-      totalTimeMS += endTime;
+      totalTimeMS += totalBuffTimeMS;
       bytesWritten += ITEM_SIZE * totalBytes;
       totalBytes -= totalBytes;
    }
 
-   printf("\n-----\n");
+   if (verbose) {
+      printf("\n-----\n");
+   }
+
+   totalTimeS = totalTimeMS * 1000;
+
    printf("Total Bytes Written: %lu\n", bytesWritten);
-   printf("Total Time to write (MS): %lu\n\n", totalTimeMS);
-  
+   printf("Total Time to write (MS): %f\n", totalTimeMS);
+   printf("Write rate: %f bytes/sec\n", (int) bytesWritten/totalTimeS);  
+
    fclose(fp);
    free(randString);
    remove(argv[1]);
