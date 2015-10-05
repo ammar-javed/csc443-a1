@@ -3,8 +3,10 @@
 #include <string.h>
 #include <sys/time.h>
 
+// Since we are only working with characters in the buffers
 #define ITEM_SIZE sizeof(char)
 
+// Booleans are defined in C
 typedef int bool;
 #define true 1
 #define false 0
@@ -33,10 +35,15 @@ int main(int argc, char** argv) {
       goto errexit;
    } 
 
+   // Check if verbose flag is found
    if (argc == 5 && strcmp(argv[4], "-v") == 0) {
       verbose = true;
    }
 
+   // Try to convert str to long type
+   // If there is an error ('123k232' instead of '123232')
+   // Then an error will be set at err and we check that to 
+   // see whether it was successful or not.
    char* err;   
    long totalBytes = strtol(argv[2], &err, 10);
    
@@ -71,6 +78,9 @@ int main(int argc, char** argv) {
 
    int fullBuffs = totalBytes / buffSize;
 
+   // Iterate and write the full buffer lengths out to the file
+   // if there is an amount left which is less than the buffer amount
+   // given, then move onto the next code block
    int j;
    for (j=0; j < fullBuffs; j++) {
       random_array(randString, buffSize);
@@ -100,6 +110,9 @@ int main(int argc, char** argv) {
       bytesWritten += ITEM_SIZE * buffSize;
    }
 
+   // That means there is still somedata left to be written but
+   // it won't take up the entire buffer size. So we just finish writing out
+   // out the rest, using the totalBytes as a remainder of bytes left to write.
    if (totalBytes != 0) {
 
       random_array(randString, totalBytes);
@@ -119,7 +132,7 @@ int main(int argc, char** argv) {
       if (verbose) {
          printf("Buffer %d stats: ", j+1);
          printf("Bytes Written: %lu ", ITEM_SIZE * totalBytes);
-         printf("Time to write (MS): %f\n", totalBuffTimeMS);
+         printf("Time (MS): %f\n", totalBuffTimeMS);
       }
 
       totalTimeMS += totalBuffTimeMS;
@@ -137,6 +150,7 @@ int main(int argc, char** argv) {
    printf("Total Time to write (MS): %f\n", totalTimeMS);
    printf("Write rate: %f bytes/sec\n", (int) bytesWritten/totalTimeS);  
 
+   // Clean up
    fclose(fp);
    free(randString);
    remove(argv[1]);
