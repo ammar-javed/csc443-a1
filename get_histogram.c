@@ -3,6 +3,7 @@
 #include <string.h>
 
 #define ITEM_SIZE sizeof(char)
+#define NUM_ALPHABETS 26
 
 typedef int bool;
 #define true 1
@@ -28,6 +29,10 @@ int get_histogram(
    char* buffer = malloc(block_size * ITEM_SIZE);
    int rc;
    int i;
+   int ch;
+   int AA = 'A';
+
+   memset(hist, 0, NUM_ALPHABETS * sizeof(long));
 
    while( !feof(file_ptr) ) {
 
@@ -45,7 +50,8 @@ int get_histogram(
       }
 
       for (i=0; i < rc; i++) {
-         hist[ buffer[i] - "A" ]++;
+         ch = buffer[i];
+         hist[ ch - AA ]++;
       }
 
       total_bytes_read += rc;
@@ -73,7 +79,7 @@ int main(int argc, char** argv) {
    }
 
    char* err;
-   long buffSize = strtol(argv[22], &err, 10);
+   long buffSize = strtol(argv[2], &err, 10);
 
    if (!*err) {
       if (verbose)
@@ -83,7 +89,7 @@ int main(int argc, char** argv) {
       goto errexit;
    }
 
-   long hist[26];
+   long hist[NUM_ALPHABETS];
    double milliseconds;
    long filelen;
    FILE *file_ptr = fopen(argv[1], "r");
@@ -103,7 +109,7 @@ int main(int argc, char** argv) {
  
 //   printf("Computed the histogram in %f ms.\n", milliseconds);
 
-   for(int i=0; i < 26; i++) {
+   for(int i=0; i < NUM_ALPHABETS; i++) {
        printf("%c : %lu\n", 'A' + i, hist[i]);
    }
 
