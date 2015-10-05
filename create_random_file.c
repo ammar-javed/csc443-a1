@@ -4,6 +4,7 @@
 #include <sys/time.h>
 
 #define ITEM_SIZE sizeof(char)
+
 typedef int bool;
 #define true 1
 #define false 0
@@ -35,6 +36,7 @@ int main(int argc, char** argv) {
    if (argc == 5 && strcmp(argv[4], "-v") == 0) {
       verbose = true;
    }
+
    char* err;   
    long totalBytes = strtol(argv[2], &err, 10);
    
