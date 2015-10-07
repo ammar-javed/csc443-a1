@@ -146,7 +146,8 @@ int main(int argc, char** argv) {
  
    printf("Computed the histogram in %f ms.\n", milliseconds);
 
-   for(int i=0; i < NUM_ALPHABETS; i++) {
+   int i;
+   for(i=0; i < NUM_ALPHABETS; i++) {
        printf("%c : %lu\n", 'A' + i, hist[i]);
    }
 
